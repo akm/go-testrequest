@@ -17,13 +17,15 @@ func TestWithServer(t *testing.T) {
 	testServer.Start()
 	defer testServer.Close()
 
+	baseURL := testServer.URL
+
 	type pattern *struct {
 		req      *http.Request
 		expected *request
 	}
 	patterns := []pattern{
 		{
-			req: testrequest.GET(),
+			req: testrequest.GET(t, testrequest.BaseUrl(baseURL)),
 			expected: &request{
 				Method: http.MethodGet,
 				Url:    "/",
@@ -32,7 +34,8 @@ func TestWithServer(t *testing.T) {
 			},
 		},
 		{
-			req: testrequest.POST(
+			req: testrequest.POST(t,
+				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users"),
 				testrequest.BodyString("hello, world"),
 			),
@@ -44,7 +47,8 @@ func TestWithServer(t *testing.T) {
 			},
 		},
 		{
-			req: testrequest.PUT(
+			req: testrequest.PUT(t,
+				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users/%d", 123),
 				testrequest.BodyString("{\"name\":\"foo\"}"),
 				testrequest.Header("Content-Type", "application/json"),
@@ -59,7 +63,8 @@ func TestWithServer(t *testing.T) {
 			},
 		},
 		{
-			req: testrequest.PATCH(
+			req: testrequest.PATCH(t,
+				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users/%d", 123),
 				testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
 				testrequest.Header("Content-Type", "application/json"),
@@ -76,7 +81,8 @@ func TestWithServer(t *testing.T) {
 			},
 		},
 		{
-			req: testrequest.DELETE(
+			req: testrequest.DELETE(t,
+				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users/%d", 456),
 				testrequest.BodyString(""),
 			),
