@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/akm/go-testrequest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWithServer(t *testing.T) {
-	testServer := startEchoServer()
+	testServer := startEchoServer(t)
 	testServer.Start()
 	defer testServer.Close()
 
@@ -105,13 +107,18 @@ func TestWithServer(t *testing.T) {
 			expected: &request{
 				Method: http.MethodDelete,
 				Url:    "/users/456",
-				Header: expectedHeader(http.Header{}),
-				Body:   "",
+				Header: expectedHeader(http.Header{
+					"Cookie": []string{"session=123"},
+				}),
+				Body: "",
 			},
 		},
 	}
 
 	client := &http.Client{}
+	jar, err := cookiejar.New(nil)
+	require.NoError(t, err)
+	client.Jar = jar
 	for _, p := range patterns {
 		t.Run(fmt.Sprintf("%s %s", p.req.Method, p.req.URL.Path), func(t *testing.T) {
 			resp, err := client.Do(p.req)
@@ -123,9 +130,19 @@ func TestWithServer(t *testing.T) {
 			if resp.StatusCode != http.StatusOK {
 				t.Fatalf("unexpected status code: %d", resp.StatusCode)
 			}
+			cookies := resp.Cookies()
+			t.Logf("CLIENT %d cookies: %+v", len(cookies), cookies)
+			client.Jar.SetCookies(p.req.URL, resp.Cookies())
+
+			respBody, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			t.Logf("CLIENT: respBody%s", string(respBody))
 
 			var actual request
-			if err := json.NewDecoder(resp.Body).Decode(&actual); err != nil {
+			if err := json.Unmarshal(respBody, &actual); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
@@ -142,13 +159,27 @@ type request struct {
 	Body   string      `json:"body"`
 }
 
-func startEchoServer() *httptest.Server {
+func startEchoServer(logger interface {
+	Logf(format string, args ...any)
+}) *httptest.Server {
 	echoHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger.Logf("SERVER: %s %s", r.Method, r.URL.String())
 		defer r.Body.Close()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+		cookie := r.Cookies()
+		logger.Logf("SERVER: cookie: %+v", cookie)
+		for _, c := range cookie {
+			cookie := &http.Cookie{
+				Name:  c.Name,
+				Value: c.Value,
+				Path:  "/",
+			}
+			logger.Logf("SERVER: set-cookie: %+v\n", *c)
+			http.SetCookie(w, cookie)
 		}
 		b, err := json.Marshal(request{
 			Method: r.Method,
@@ -164,7 +195,6 @@ func startEchoServer() *httptest.Server {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
 		w.WriteHeader(http.StatusOK)
 	})
 	return httptest.NewUnstartedServer(echoHandler)
