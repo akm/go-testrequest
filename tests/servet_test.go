@@ -86,14 +86,14 @@ func TestWithServer(t *testing.T) {
 				testrequest.Path("/users/%d", 123),
 				testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
 				testrequest.Header("Content-Type", "application/json"),
-				testrequest.Cookie(&http.Cookie{Name: "session", Value: "123"}),
+				testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
 			),
 			expected: &request{
 				Method: http.MethodPatch,
 				Url:    "/users/123",
 				Header: expectedHeader(http.Header{
 					"Content-Type": []string{"application/json"},
-					"Cookie":       []string{"session=123"},
+					"Cookie":       []string{"session=session1"},
 				}),
 				Body: "{\"name\":\"bar\"}",
 			},
@@ -108,7 +108,7 @@ func TestWithServer(t *testing.T) {
 				Method: http.MethodDelete,
 				Url:    "/users/456",
 				Header: expectedHeader(http.Header{
-					"Cookie": []string{"session=123"},
+					"Cookie": []string{"session=session1"}, // from previous request
 				}),
 				Body: "",
 			},
