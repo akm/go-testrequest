@@ -6,20 +6,15 @@ import (
 )
 
 func New(t *testing.T, method string, options ...Option) *http.Request {
-	t.Helper()
-	b := &builder{method: method, headers: make(http.Header)}
-	for _, option := range options {
-		option(b)
-	}
-	return b.build(t)
+	return DefaultFactory.New(t, method, options...)
 }
 
-func GET(t *testing.T, v ...Option) *http.Request     { return New(t, http.MethodGet, v...) }
-func HEAD(t *testing.T, v ...Option) *http.Request    { return New(t, http.MethodHead, v...) }
-func POST(t *testing.T, v ...Option) *http.Request    { return New(t, http.MethodPost, v...) }
-func PUT(t *testing.T, v ...Option) *http.Request     { return New(t, http.MethodPut, v...) }
-func PATCH(t *testing.T, v ...Option) *http.Request   { return New(t, http.MethodPatch, v...) }
-func DELETE(t *testing.T, v ...Option) *http.Request  { return New(t, http.MethodDelete, v...) }
-func CONNECT(t *testing.T, v ...Option) *http.Request { return New(t, http.MethodConnect, v...) }
-func OPTIONS(t *testing.T, v ...Option) *http.Request { return New(t, http.MethodOptions, v...) }
-func TRACE(t *testing.T, v ...Option) *http.Request   { return New(t, http.MethodTrace, v...) }
+func GET(t *testing.T, v ...Option) *http.Request     { return DefaultFactory.GET(t, v...) }
+func HEAD(t *testing.T, v ...Option) *http.Request    { return DefaultFactory.HEAD(t, v...) }
+func POST(t *testing.T, v ...Option) *http.Request    { return DefaultFactory.POST(t, v...) }
+func PUT(t *testing.T, v ...Option) *http.Request     { return DefaultFactory.PUT(t, v...) }
+func PATCH(t *testing.T, v ...Option) *http.Request   { return DefaultFactory.PATCH(t, v...) }
+func DELETE(t *testing.T, v ...Option) *http.Request  { return DefaultFactory.DELETE(t, v...) }
+func CONNECT(t *testing.T, v ...Option) *http.Request { return DefaultFactory.CONNECT(t, v...) }
+func OPTIONS(t *testing.T, v ...Option) *http.Request { return DefaultFactory.OPTIONS(t, v...) }
+func TRACE(t *testing.T, v ...Option) *http.Request   { return DefaultFactory.TRACE(t, v...) }
