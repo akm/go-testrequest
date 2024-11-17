@@ -8,7 +8,6 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"strconv"
 	"testing"
 
 	"github.com/akm/go-testrequest"
@@ -22,8 +21,6 @@ func TestWithServer(t *testing.T) {
 	defer testServer.Close()
 
 	testServerURL, err := url.Parse(testServer.URL)
-	require.NoError(t, err)
-	testServerURLPort, err := strconv.Atoi(testServerURL.Port())
 	require.NoError(t, err)
 
 	baseURL := testServer.URL
@@ -125,7 +122,7 @@ func TestWithServer(t *testing.T) {
 				// testrequest.BaseUrl(baseURL),
 				testrequest.Scheme("http"),
 				testrequest.Host(testServerURL.Hostname()),
-				testrequest.Port(testServerURLPort),
+				testrequest.PortString(testServerURL.Port()),
 			),
 			expected: &request{
 				Method: http.MethodOptions,
