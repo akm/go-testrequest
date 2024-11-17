@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
+	"testing"
 )
 
 type builder struct {
@@ -22,15 +22,17 @@ type builder struct {
 	body    io.Reader
 }
 
-func (b *builder) build() *http.Request {
+func (b *builder) build(t *testing.T) *http.Request {
+	t.Helper()
 	url := b.buildURL()
-	var ctx context.Context
-	if b.context != nil {
-		ctx = b.context
-	} else {
-		ctx = context.Background()
+	fmt.Println(url)
+	req, err := http.NewRequest(b.method, url, b.body)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-	req := httptest.NewRequestWithContext(ctx, b.method, url, b.body)
+	if b.context != nil {
+		req = req.WithContext(b.context)
+	}
 	req.Header = b.headers
 	for _, cookie := range b.cookies {
 		req.AddCookie(cookie)
@@ -42,7 +44,7 @@ func (b *builder) buildURL() string {
 	var url string
 	if b.baseUrl != "" {
 		url = b.baseUrl
-	} else if b.scheme != "" || b.host != "" || b.port != 0 {
+	} else {
 		scheme := "http"
 		host := "localhost"
 		port := 80
