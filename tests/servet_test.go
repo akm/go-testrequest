@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
+	"strconv"
 	"testing"
 
 	"github.com/akm/go-testrequest"
@@ -18,6 +20,11 @@ func TestWithServer(t *testing.T) {
 	testServer := startEchoServer(t)
 	testServer.Start()
 	defer testServer.Close()
+
+	testServerURL, err := url.Parse(testServer.URL)
+	require.NoError(t, err)
+	testServerURLPort, err := strconv.Atoi(testServerURL.Port())
+	require.NoError(t, err)
 
 	baseURL := testServer.URL
 
@@ -113,6 +120,22 @@ func TestWithServer(t *testing.T) {
 				Body: "",
 			},
 		},
+		{
+			req: testrequest.OPTIONS(t,
+				// testrequest.BaseUrl(baseURL),
+				testrequest.Scheme("http"),
+				testrequest.Host(testServerURL.Hostname()),
+				testrequest.Port(testServerURLPort),
+			),
+			expected: &request{
+				Method: http.MethodOptions,
+				Url:    "/",
+				Header: expectedHeader(http.Header{
+					"Cookie": []string{"session=session1"}, // from previous request
+				}),
+				Body: "",
+			},
+		},
 	}
 
 	client := &http.Client{}
@@ -138,7 +161,6 @@ func TestWithServer(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-
 			t.Logf("CLIENT: respBody%s", string(respBody))
 
 			var actual request
