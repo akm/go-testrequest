@@ -25,7 +25,6 @@ type builder struct {
 func (b *builder) build(t *testing.T) *http.Request {
 	t.Helper()
 	url := b.buildURL()
-	fmt.Println(url)
 	req, err := http.NewRequest(b.method, url, b.body)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
