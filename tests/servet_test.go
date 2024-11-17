@@ -19,6 +19,22 @@ func TestWithServer(t *testing.T) {
 
 	baseURL := testServer.URL
 
+	defaultHeader := func() http.Header {
+		return http.Header{
+			"Accept-Encoding": []string{"gzip"},
+			"User-Agent":      []string{"Go-http-client/1.1"},
+		}
+	}
+	mergeHeader := func(h1, h2 http.Header) http.Header {
+		for k, v := range h2 {
+			h1[k] = v
+		}
+		return h1
+	}
+	expectedHeader := func(h http.Header) http.Header {
+		return mergeHeader(defaultHeader(), h)
+	}
+
 	type pattern *struct {
 		req      *http.Request
 		expected *request
@@ -29,7 +45,7 @@ func TestWithServer(t *testing.T) {
 			expected: &request{
 				Method: http.MethodGet,
 				Url:    "/",
-				Header: http.Header{},
+				Header: expectedHeader(http.Header{}),
 				Body:   "",
 			},
 		},
@@ -42,7 +58,7 @@ func TestWithServer(t *testing.T) {
 			expected: &request{
 				Method: http.MethodPost,
 				Url:    "/users",
-				Header: http.Header{},
+				Header: expectedHeader(http.Header{}),
 				Body:   "hello, world",
 			},
 		},
@@ -56,9 +72,9 @@ func TestWithServer(t *testing.T) {
 			expected: &request{
 				Method: http.MethodPut,
 				Url:    "/users/123",
-				Header: http.Header{
+				Header: expectedHeader(http.Header{
 					"Content-Type": []string{"application/json"},
-				},
+				}),
 				Body: "{\"name\":\"foo\"}",
 			},
 		},
@@ -73,10 +89,10 @@ func TestWithServer(t *testing.T) {
 			expected: &request{
 				Method: http.MethodPatch,
 				Url:    "/users/123",
-				Header: http.Header{
+				Header: expectedHeader(http.Header{
 					"Content-Type": []string{"application/json"},
 					"Cookie":       []string{"session=123"},
-				},
+				}),
 				Body: "{\"name\":\"bar\"}",
 			},
 		},
@@ -89,14 +105,16 @@ func TestWithServer(t *testing.T) {
 			expected: &request{
 				Method: http.MethodDelete,
 				Url:    "/users/456",
+				Header: expectedHeader(http.Header{}),
 				Body:   "",
 			},
 		},
 	}
 
+	client := &http.Client{}
 	for _, p := range patterns {
 		t.Run(fmt.Sprintf("%s %s", p.req.Method, p.req.URL.Path), func(t *testing.T) {
-			resp, err := http.DefaultClient.Do(p.req)
+			resp, err := client.Do(p.req)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
