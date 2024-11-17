@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -15,7 +16,8 @@ func Context(v context.Context) Option { return func(b *builder) { b.context = v
 func BaseUrl(v string) Option          { return func(b *builder) { b.baseUrl = v } }
 func Scheme(v string) Option           { return func(b *builder) { b.scheme = v } }
 func Host(v string) Option             { return func(b *builder) { b.host = v } }
-func Port(v int) Option                { return func(b *builder) { b.port = v } }
+func PortString(v string) Option       { return func(b *builder) { b.port = v } }
+func Port(v int) Option                { return func(b *builder) { b.port = strconv.Itoa(v) } }
 
 func Path(v string, args ...interface{}) Option {
 	return func(b *builder) { b.path = fmt.Sprintf(v, args...) }

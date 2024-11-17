@@ -14,7 +14,7 @@ type builder struct {
 	baseUrl string
 	scheme  string
 	host    string
-	port    int
+	port    string
 	path    string
 	query   [][2]string
 	headers http.Header
@@ -46,17 +46,17 @@ func (b *builder) buildURL() string {
 	} else {
 		scheme := "http"
 		host := "localhost"
-		port := 80
+		port := "80"
 		if b.scheme != "" {
 			scheme = b.scheme
 		}
 		if b.host != "" {
 			host = b.host
 		}
-		if b.port != 0 {
+		if b.port != "" {
 			port = b.port
 		}
-		url = fmt.Sprintf("%s://%s:%d", scheme, host, port)
+		url = fmt.Sprintf("%s://%s:%s", scheme, host, port)
 	}
 
 	url += b.path
