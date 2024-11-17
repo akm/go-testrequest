@@ -1,6 +1,7 @@
 package testrequest
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 )
 
 type builder struct {
+	context context.Context
 	method  string
 	baseUrl string
 	scheme  string
@@ -22,7 +24,13 @@ type builder struct {
 
 func (b *builder) build() *http.Request {
 	url := b.buildURL()
-	req := httptest.NewRequest(b.method, url, b.body)
+	var ctx context.Context
+	if b.context != nil {
+		ctx = b.context
+	} else {
+		ctx = context.Background()
+	}
+	req := httptest.NewRequestWithContext(ctx, b.method, url, b.body)
 	req.Header = b.headers
 	for _, cookie := range b.cookies {
 		req.AddCookie(cookie)
