@@ -1,9 +1,12 @@
 package testrequest
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 )
 
 type Option = func(*builder)
@@ -23,4 +26,12 @@ func Query(k, v string) Option {
 func Header(k, v string) Option { return func(b *builder) { b.headers.Add(k, v) } }
 func Cookie(v *http.Cookie) Option {
 	return func(b *builder) { b.cookies = append(b.cookies, v) }
+}
+
+func Body(v *io.Reader) Option { return func(b *builder) { b.body = *v } }
+func BodyString(v string) Option {
+	return func(b *builder) { b.body = io.NopCloser(strings.NewReader(v)) }
+}
+func BodyBytes(v []byte) Option {
+	return func(b *builder) { b.body = io.NopCloser(bytes.NewReader(v)) }
 }
