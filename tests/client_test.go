@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"testing"
 
@@ -22,6 +21,7 @@ func TestClientWithServer(t *testing.T) {
 	require.NoError(t, err)
 
 	baseURL := testServer.URL
+	factory := testrequest.NewFactory(testrequest.BaseUrl(baseURL))
 
 	defaultHeader := func() http.Header {
 		return http.Header{
@@ -40,14 +40,16 @@ func TestClientWithServer(t *testing.T) {
 	}
 
 	type pattern *struct {
-		name      string
-		reqByFunc testrequest.Func
-		expected  *request
+		name         string
+		reqByFunc    testrequest.Func
+		reqByFactory testrequest.Func
+		expected     *request
 	}
 	patterns := []pattern{
 		{
 			"GET /",
 			testrequest.GET(testrequest.BaseUrl(baseURL)),
+			factory.GET(),
 			&request{
 				Method: http.MethodGet,
 				Url:    "/",
@@ -62,6 +64,10 @@ func TestClientWithServer(t *testing.T) {
 				testrequest.Path("/users"),
 				testrequest.BodyString("hello, world"),
 			),
+			factory.POST(
+				testrequest.Path("/users"),
+				testrequest.BodyString("hello, world"),
+			),
 			&request{
 				Method: http.MethodPost,
 				Url:    "/users",
@@ -73,6 +79,11 @@ func TestClientWithServer(t *testing.T) {
 			"PUT /users/123",
 			testrequest.PUT(
 				testrequest.BaseUrl(baseURL),
+				testrequest.Path("/users/%d", 123),
+				testrequest.BodyString("{\"name\":\"foo\"}"),
+				testrequest.Header("Content-Type", "application/json"),
+			),
+			factory.PUT(
 				testrequest.Path("/users/%d", 123),
 				testrequest.BodyString("{\"name\":\"foo\"}"),
 				testrequest.Header("Content-Type", "application/json"),
@@ -95,6 +106,12 @@ func TestClientWithServer(t *testing.T) {
 				testrequest.Header("Content-Type", "application/json"),
 				testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
 			),
+			factory.PATCH(
+				testrequest.Path("/users/%d", 123),
+				testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
+				testrequest.Header("Content-Type", "application/json"),
+				testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
+			),
 			&request{
 				Method: http.MethodPatch,
 				Url:    "/users/123",
@@ -112,13 +129,15 @@ func TestClientWithServer(t *testing.T) {
 				testrequest.Path("/users/%d", 456),
 				testrequest.BodyString(""),
 			),
+			factory.DELETE(
+				testrequest.Path("/users/%d", 456),
+				testrequest.BodyString(""),
+			),
 			&request{
 				Method: http.MethodDelete,
 				Url:    "/users/456",
-				Header: expectedHeader(http.Header{
-					"Cookie": []string{"session=session1"}, // from previous request
-				}),
-				Body: "",
+				Header: expectedHeader(http.Header{}),
+				Body:   "",
 			},
 		},
 		{
@@ -129,49 +148,59 @@ func TestClientWithServer(t *testing.T) {
 				testrequest.Host(testServerURL.Hostname()),
 				testrequest.PortString(testServerURL.Port()),
 			),
+			factory.OPTIONS(),
 			&request{
 				Method: http.MethodOptions,
 				Url:    "/",
-				Header: expectedHeader(http.Header{
-					"Cookie": []string{"session=session1"}, // from previous request
-				}),
-				Body: "",
+				Header: expectedHeader(http.Header{}),
+				Body:   "",
 			},
 		},
 	}
 
-	client := &http.Client{}
-	jar, err := cookiejar.New(nil)
-	require.NoError(t, err)
-	client.Jar = jar
+	type getter struct {
+		name string
+		get  func(p pattern) testrequest.Func
+	}
+
+	funcGetters := []getter{
+		{"by func", func(p pattern) testrequest.Func { return p.reqByFunc }},
+		{"by factory", func(p pattern) testrequest.Func { return p.reqByFactory }},
+	}
+
 	for _, p := range patterns {
-		t.Run(p.name, func(t *testing.T) {
-			req := p.reqByFunc(t)
-			resp, err := client.Do(req)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			defer resp.Body.Close()
+		for _, fg := range funcGetters {
+			getter := fg.get(p)
+			t.Run(p.name+" "+fg.name, func(t *testing.T) {
+				client := &http.Client{}
 
-			if resp.StatusCode != http.StatusOK {
-				t.Fatalf("unexpected status code: %d", resp.StatusCode)
-			}
-			cookies := resp.Cookies()
-			t.Logf("CLIENT %d cookies: %+v", len(cookies), cookies)
-			client.Jar.SetCookies(req.URL, resp.Cookies())
+				req := getter(t)
+				resp, err := client.Do(req)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				defer resp.Body.Close()
 
-			respBody, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			t.Logf("CLIENT: respBody%s", string(respBody))
+				if resp.StatusCode != http.StatusOK {
+					t.Fatalf("unexpected status code: %d", resp.StatusCode)
+				}
+				cookies := resp.Cookies()
+				t.Logf("CLIENT %d cookies: %+v", len(cookies), cookies)
+				// client.Jar.SetCookies(req.URL, resp.Cookies())
 
-			var actual request
-			if err := json.Unmarshal(respBody, &actual); err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+				respBody, err := io.ReadAll(resp.Body)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				t.Logf("CLIENT: respBody%s", string(respBody))
 
-			assert.Equal(t, p.expected, &actual)
-		})
+				var actual request
+				if err := json.Unmarshal(respBody, &actual); err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+
+				assert.Equal(t, p.expected, &actual)
+			})
+		}
 	}
 }
