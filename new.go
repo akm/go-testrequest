@@ -1,20 +1,15 @@
 package testrequest
 
-import (
-	"net/http"
-	"testing"
-)
-
-func New(t *testing.T, method string, options ...Option) *http.Request {
-	return DefaultFactory.New(t, method, options...)
+func New(method string, options ...Option) Func {
+	return DefaultFactory.New(method, options...)
 }
 
-func GET(t *testing.T, v ...Option) *http.Request     { return DefaultFactory.GET(t, v...) }
-func HEAD(t *testing.T, v ...Option) *http.Request    { return DefaultFactory.HEAD(t, v...) }
-func POST(t *testing.T, v ...Option) *http.Request    { return DefaultFactory.POST(t, v...) }
-func PUT(t *testing.T, v ...Option) *http.Request     { return DefaultFactory.PUT(t, v...) }
-func PATCH(t *testing.T, v ...Option) *http.Request   { return DefaultFactory.PATCH(t, v...) }
-func DELETE(t *testing.T, v ...Option) *http.Request  { return DefaultFactory.DELETE(t, v...) }
-func CONNECT(t *testing.T, v ...Option) *http.Request { return DefaultFactory.CONNECT(t, v...) }
-func OPTIONS(t *testing.T, v ...Option) *http.Request { return DefaultFactory.OPTIONS(t, v...) }
-func TRACE(t *testing.T, v ...Option) *http.Request   { return DefaultFactory.TRACE(t, v...) }
+func GET(v ...Option) Func     { return DefaultFactory.GET(v...) }
+func HEAD(v ...Option) Func    { return DefaultFactory.HEAD(v...) }
+func POST(v ...Option) Func    { return DefaultFactory.POST(v...) }
+func PUT(v ...Option) Func     { return DefaultFactory.PUT(v...) }
+func PATCH(v ...Option) Func   { return DefaultFactory.PATCH(v...) }
+func DELETE(v ...Option) Func  { return DefaultFactory.DELETE(v...) }
+func CONNECT(v ...Option) Func { return DefaultFactory.CONNECT(v...) }
+func OPTIONS(v ...Option) Func { return DefaultFactory.OPTIONS(v...) }
+func TRACE(v ...Option) Func   { return DefaultFactory.TRACE(v...) }
