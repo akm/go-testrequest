@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWithServer(t *testing.T) {
+func TestClientWithServer(t *testing.T) {
 	testServer := startEchoServer(t)
 	testServer.Start()
 	defer testServer.Close()
