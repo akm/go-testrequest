@@ -46,9 +46,9 @@ func TestClientWithServer(t *testing.T) {
 	}
 	patterns := []pattern{
 		{
-			name:      "GET /",
-			reqByFunc: testrequest.GET(testrequest.BaseUrl(baseURL)),
-			expected: &request{
+			"GET /",
+			testrequest.GET(testrequest.BaseUrl(baseURL)),
+			&request{
 				Method: http.MethodGet,
 				Url:    "/",
 				Header: expectedHeader(http.Header{}),
@@ -56,13 +56,13 @@ func TestClientWithServer(t *testing.T) {
 			},
 		},
 		{
-			name: "POST /users",
-			reqByFunc: testrequest.POST(
+			"POST /users",
+			testrequest.POST(
 				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users"),
 				testrequest.BodyString("hello, world"),
 			),
-			expected: &request{
+			&request{
 				Method: http.MethodPost,
 				Url:    "/users",
 				Header: expectedHeader(http.Header{}),
@@ -70,14 +70,14 @@ func TestClientWithServer(t *testing.T) {
 			},
 		},
 		{
-			name: "PUT /users/123",
-			reqByFunc: testrequest.PUT(
+			"PUT /users/123",
+			testrequest.PUT(
 				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users/%d", 123),
 				testrequest.BodyString("{\"name\":\"foo\"}"),
 				testrequest.Header("Content-Type", "application/json"),
 			),
-			expected: &request{
+			&request{
 				Method: http.MethodPut,
 				Url:    "/users/123",
 				Header: expectedHeader(http.Header{
@@ -87,15 +87,15 @@ func TestClientWithServer(t *testing.T) {
 			},
 		},
 		{
-			name: "PATCH /users/123",
-			reqByFunc: testrequest.PATCH(
+			"PATCH /users/123",
+			testrequest.PATCH(
 				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users/%d", 123),
 				testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
 				testrequest.Header("Content-Type", "application/json"),
 				testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
 			),
-			expected: &request{
+			&request{
 				Method: http.MethodPatch,
 				Url:    "/users/123",
 				Header: expectedHeader(http.Header{
@@ -106,13 +106,13 @@ func TestClientWithServer(t *testing.T) {
 			},
 		},
 		{
-			name: "DELETE /users/456",
-			reqByFunc: testrequest.DELETE(
+			"DELETE /users/456",
+			testrequest.DELETE(
 				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users/%d", 456),
 				testrequest.BodyString(""),
 			),
-			expected: &request{
+			&request{
 				Method: http.MethodDelete,
 				Url:    "/users/456",
 				Header: expectedHeader(http.Header{
@@ -122,14 +122,14 @@ func TestClientWithServer(t *testing.T) {
 			},
 		},
 		{
-			name: "OPTIONS /",
-			reqByFunc: testrequest.OPTIONS(
+			"OPTIONS /",
+			testrequest.OPTIONS(
 				// testrequest.BaseUrl(baseURL),
 				testrequest.Scheme("http"),
 				testrequest.Host(testServerURL.Hostname()),
 				testrequest.PortString(testServerURL.Port()),
 			),
-			expected: &request{
+			&request{
 				Method: http.MethodOptions,
 				Url:    "/",
 				Header: expectedHeader(http.Header{
