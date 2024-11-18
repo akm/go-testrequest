@@ -1,7 +1,8 @@
 # github.com/akm/go-testrequest
 
-module: github.com/akm/go-testrequest
-package: testrequest
+![](https://img.shields.io/github/actions/workflow/status/akm/go-testrequest/ci.yml)
+![](https://img.shields.io/github/license/akm/go-testrequest)
+
 
 ## Overview
 
