@@ -40,14 +40,14 @@ func TestClientWithServer(t *testing.T) {
 	}
 
 	type pattern *struct {
-		name     string
-		req      testrequest.Func
-		expected *request
+		name      string
+		reqByFunc testrequest.Func
+		expected  *request
 	}
 	patterns := []pattern{
 		{
-			name: "GET /",
-			req:  testrequest.GET(testrequest.BaseUrl(baseURL)),
+			name:      "GET /",
+			reqByFunc: testrequest.GET(testrequest.BaseUrl(baseURL)),
 			expected: &request{
 				Method: http.MethodGet,
 				Url:    "/",
@@ -57,7 +57,7 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			name: "POST /users",
-			req: testrequest.POST(
+			reqByFunc: testrequest.POST(
 				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users"),
 				testrequest.BodyString("hello, world"),
@@ -71,7 +71,7 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			name: "PUT /users/123",
-			req: testrequest.PUT(
+			reqByFunc: testrequest.PUT(
 				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users/%d", 123),
 				testrequest.BodyString("{\"name\":\"foo\"}"),
@@ -88,7 +88,7 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			name: "PATCH /users/123",
-			req: testrequest.PATCH(
+			reqByFunc: testrequest.PATCH(
 				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users/%d", 123),
 				testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
@@ -107,7 +107,7 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			name: "DELETE /users/456",
-			req: testrequest.DELETE(
+			reqByFunc: testrequest.DELETE(
 				testrequest.BaseUrl(baseURL),
 				testrequest.Path("/users/%d", 456),
 				testrequest.BodyString(""),
@@ -123,7 +123,7 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			name: "OPTIONS /",
-			req: testrequest.OPTIONS(
+			reqByFunc: testrequest.OPTIONS(
 				// testrequest.BaseUrl(baseURL),
 				testrequest.Scheme("http"),
 				testrequest.Host(testServerURL.Hostname()),
@@ -146,7 +146,7 @@ func TestClientWithServer(t *testing.T) {
 	client.Jar = jar
 	for _, p := range patterns {
 		t.Run(p.name, func(t *testing.T) {
-			req := p.req(t)
+			req := p.reqByFunc(t)
 			resp, err := client.Do(req)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
