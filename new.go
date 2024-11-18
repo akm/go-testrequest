@@ -1,25 +1,33 @@
 package testrequest
 
-import (
-	"net/http"
-	"testing"
-)
-
-func New(t *testing.T, method string, options ...Option) *http.Request {
-	t.Helper()
-	b := &builder{method: method, headers: make(http.Header)}
-	for _, option := range options {
-		option(b)
-	}
-	return b.build(t)
+// New creates a new request with the specified method and options.
+func New(method string, options ...Option) Func {
+	return DefaultFactory.New(method, options...)
 }
 
-func GET(t *testing.T, v ...Option) *http.Request     { return New(t, http.MethodGet, v...) }
-func HEAD(t *testing.T, v ...Option) *http.Request    { return New(t, http.MethodHead, v...) }
-func POST(t *testing.T, v ...Option) *http.Request    { return New(t, http.MethodPost, v...) }
-func PUT(t *testing.T, v ...Option) *http.Request     { return New(t, http.MethodPut, v...) }
-func PATCH(t *testing.T, v ...Option) *http.Request   { return New(t, http.MethodPatch, v...) }
-func DELETE(t *testing.T, v ...Option) *http.Request  { return New(t, http.MethodDelete, v...) }
-func CONNECT(t *testing.T, v ...Option) *http.Request { return New(t, http.MethodConnect, v...) }
-func OPTIONS(t *testing.T, v ...Option) *http.Request { return New(t, http.MethodOptions, v...) }
-func TRACE(t *testing.T, v ...Option) *http.Request   { return New(t, http.MethodTrace, v...) }
+// GET creates a new GET request with the specified options.
+func GET(v ...Option) Func { return DefaultFactory.GET(v...) }
+
+// HEAD creates a new HEAD request with the specified options.
+func HEAD(v ...Option) Func { return DefaultFactory.HEAD(v...) }
+
+// POST creates a new POST request with the specified options.
+func POST(v ...Option) Func { return DefaultFactory.POST(v...) }
+
+// PUT creates a new PUT request with the specified options.
+func PUT(v ...Option) Func { return DefaultFactory.PUT(v...) }
+
+// PATCH creates a new PATCH request with the specified options.
+func PATCH(v ...Option) Func { return DefaultFactory.PATCH(v...) }
+
+// DELETE creates a new DELETE request with the specified options.
+func DELETE(v ...Option) Func { return DefaultFactory.DELETE(v...) }
+
+// CONNECT creates a new CONNECT request with the specified options.
+func CONNECT(v ...Option) Func { return DefaultFactory.CONNECT(v...) }
+
+// OPTIONS creates a new OPTIONS request with the specified options.
+func OPTIONS(v ...Option) Func { return DefaultFactory.OPTIONS(v...) }
+
+// TRACE creates a new TRACE request with the specified options.
+func TRACE(v ...Option) Func { return DefaultFactory.TRACE(v...) }
