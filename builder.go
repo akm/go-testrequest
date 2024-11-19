@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"testing"
 )
 
 type builder struct {
@@ -22,12 +21,11 @@ type builder struct {
 	body    io.Reader
 }
 
-func (b *builder) build(t *testing.T) *http.Request {
-	t.Helper()
+func (b *builder) build() (*http.Request, error) {
 	url := b.buildURL()
 	req, err := http.NewRequest(b.method, url, b.body)
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		return nil, err
 	}
 	if b.context != nil {
 		req = req.WithContext(b.context)
@@ -36,7 +34,7 @@ func (b *builder) build(t *testing.T) *http.Request {
 	for _, cookie := range b.cookies {
 		req.AddCookie(cookie)
 	}
-	return req
+	return req, nil
 }
 
 func (b *builder) buildURL() string {

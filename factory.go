@@ -17,15 +17,19 @@ func NewFactory(defaultOptions ...Option) *Factory {
 
 // New creates a new HTTP request function with the specified method and options.
 func (f *Factory) New(method string, options ...Option) Func {
+	b := &builder{method: method, headers: make(http.Header)}
+	// Apply default options and additional options to the builder.
+	for _, option := range append(f.defaultOptions, options...) {
+		option(b)
+	}
 	return func(t *testing.T) *http.Request {
 		t.Helper()
-		b := &builder{method: method, headers: make(http.Header)}
-		// Apply default options and additional options to the builder.
-		for _, option := range append(f.defaultOptions, options...) {
-			option(b)
-		}
 		// Build and return the HTTP request.
-		return b.build(t)
+		req, err := b.build()
+		if err != nil {
+			t.Fatal(err)
+		}
+		return req
 	}
 }
 
