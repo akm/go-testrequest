@@ -21,7 +21,7 @@ func TestClientWithServer(t *testing.T) {
 	require.NoError(t, err)
 
 	baseURL := testServer.URL
-	factory := testrequest.NewFactory(testrequest.BaseUrl(baseURL))
+	baseOpts := []testrequest.Option{testrequest.BaseUrl(baseURL)}
 
 	defaultHeader := func() http.Header {
 		return http.Header{
@@ -49,7 +49,7 @@ func TestClientWithServer(t *testing.T) {
 		{
 			"GET /",
 			testrequest.GET(testrequest.BaseUrl(baseURL)),
-			factory.GET(),
+			testrequest.GET(baseOpts...),
 			&request{
 				Method: http.MethodGet,
 				Url:    "/",
@@ -64,9 +64,11 @@ func TestClientWithServer(t *testing.T) {
 				testrequest.Path("/users"),
 				testrequest.BodyString("hello, world"),
 			),
-			factory.POST(
-				testrequest.Path("/users"),
-				testrequest.BodyString("hello, world"),
+			testrequest.POST(
+				append(baseOpts,
+					testrequest.Path("/users"),
+					testrequest.BodyString("hello, world"),
+				)...,
 			),
 			&request{
 				Method: http.MethodPost,
@@ -83,10 +85,12 @@ func TestClientWithServer(t *testing.T) {
 				testrequest.BodyString("{\"name\":\"foo\"}"),
 				testrequest.Header("Content-Type", "application/json"),
 			),
-			factory.PUT(
-				testrequest.Path("/users/%d", 123),
-				testrequest.BodyString("{\"name\":\"foo\"}"),
-				testrequest.Header("Content-Type", "application/json"),
+			testrequest.PUT(
+				append(baseOpts,
+					testrequest.Path("/users/%d", 123),
+					testrequest.BodyString("{\"name\":\"foo\"}"),
+					testrequest.Header("Content-Type", "application/json"),
+				)...,
 			),
 			&request{
 				Method: http.MethodPut,
@@ -106,11 +110,13 @@ func TestClientWithServer(t *testing.T) {
 				testrequest.Header("Content-Type", "application/json"),
 				testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
 			),
-			factory.PATCH(
-				testrequest.Path("/users/%d", 123),
-				testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
-				testrequest.Header("Content-Type", "application/json"),
-				testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
+			testrequest.PATCH(
+				append(baseOpts,
+					testrequest.Path("/users/%d", 123),
+					testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
+					testrequest.Header("Content-Type", "application/json"),
+					testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
+				)...,
 			),
 			&request{
 				Method: http.MethodPatch,
@@ -129,9 +135,11 @@ func TestClientWithServer(t *testing.T) {
 				testrequest.Path("/users/%d", 456),
 				testrequest.BodyString(""),
 			),
-			factory.DELETE(
-				testrequest.Path("/users/%d", 456),
-				testrequest.BodyString(""),
+			testrequest.DELETE(
+				append(baseOpts,
+					testrequest.Path("/users/%d", 456),
+					testrequest.BodyString(""),
+				)...,
 			),
 			&request{
 				Method: http.MethodDelete,
@@ -148,7 +156,7 @@ func TestClientWithServer(t *testing.T) {
 				testrequest.Host(testServerURL.Hostname()),
 				testrequest.PortString(testServerURL.Port()),
 			),
-			factory.OPTIONS(),
+			testrequest.OPTIONS(baseOpts...),
 			&request{
 				Method: http.MethodOptions,
 				Url:    "/",
