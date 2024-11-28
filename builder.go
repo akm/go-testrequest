@@ -21,6 +21,10 @@ type builder struct {
 	body    io.Reader
 }
 
+func NewBuilder(method string) *builder {
+	return &builder{method: method, headers: make(http.Header)}
+}
+
 func (b *builder) build() (*http.Request, error) {
 	url := b.buildURL()
 	req, err := http.NewRequest(b.method, url, b.body)

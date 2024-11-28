@@ -7,7 +7,7 @@ import (
 
 // New creates a new request with the specified method and options.
 func New(method string, options ...Option) Func {
-	b := &builder{method: method, headers: make(http.Header)}
+	b := NewBuilder(method)
 	// Apply default options and additional options to the builder.
 	for _, option := range options {
 		option(b)
