@@ -1,17 +1,17 @@
-# github.com/akm/go-testrequest
+# github.com/akm/reqb
 
-![](https://img.shields.io/github/actions/workflow/status/akm/go-testrequest/ci.yml)
-![](https://img.shields.io/github/license/akm/go-testrequest)
+![](https://img.shields.io/github/actions/workflow/status/akm/reqb/ci.yml)
+![](https://img.shields.io/github/license/akm/reqb)
 
 
 ## Overview
 
-`go-testrequest` is a Go package that simplifies the creation and testing of HTTP requests. It provides a flexible and extensible way to build HTTP requests using a set of options and a factory pattern.
+`reqb` means `request builder`. The official pronunciation is 'rek-b'. It is a Go package that simplifies the creation and testing of HTTP requests. It provides a flexible and extensible way to build HTTP requests using a set of options and a factory pattern.
 
 ## Installation
 
 ```
-go get github.com/akm/go-testrequest
+go get github.com/akm/reqb
 ```
 
 
@@ -23,41 +23,41 @@ You can create HTTP requests using the provided functions such as `GET`, `POST`,
 
 ```golang
 import (
-    "github.com/akm/go-testrequest"
+    "github.com/akm/reqb"
 )
 
-req := testrequest.GET(
-    testrequest.BaseUrl("http://example.com"),
-    testrequest.Path("/users"),
-    testrequest.Header("Authorization", "Bearer token"),
+req := reqb.GET(
+    reqb.BaseUrl("http://example.com"),
+    reqb.Path("/users"),
+    reqb.Header("Authorization", "Bearer token"),
 )
 ```
 
-### Using Factories
+### Using Options type
 
-Factories allow you to create requests with a set of default options. This is useful when you need to create multiple requests with the same base configuration.
+`Options` allows you to create requests with a set of some options. This is useful when you need to create multiple requests with the same base configuration.
 
 ```golang
-factory := testrequest.NewFactory(testrequest.BaseUrl("http://example.com"))
+defaultOpts := reqb.Options{reqb.BaseUrl("http://example.com")}
 
-req := factory.POST(
-    testrequest.Path("/users"),
-    testrequest.BodyString(`{"name":"John Doe"}`),
+req := defaultOpts.POST(
+    reqb.Path("/users"),
+    reqb.BodyString(`{"name":"John Doe"}`),
 )
 ```
 
 ## Example Test
 
-Here is an example of how to use go-testrequest in a test:
+Here is an example of how to use reqb in a test:
 
 ```golang
-package testrequest
+package reqb
 
 import (
     "net/http"
     "testing"
 
-    "github.com/akm/go-testrequest"
+    "github.com/akm/reqb"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
 )
@@ -67,10 +67,10 @@ func TestClientWithServer(t *testing.T) {
     testServer.Start()
     defer testServer.Close()
 
-    factory := testrequest.NewFactory(testrequest.BaseUrl(testServer.URL))
+    factory := reqb.Options{reqb.BaseUrl(testServer.URL)}
 
     client := &http.Client{}
-    resp, err := client.Do(factory.GET(testrequest.Path("/foo")))
+    resp, err := client.Do(factory.GET(reqb.Path("/foo")))
     require.NoError(t, err)
     defer resp.Body.Close()
 
@@ -78,5 +78,5 @@ func TestClientWithServer(t *testing.T) {
 }
 ```
 
-This example demonstrates how to use `go-testrequest` to create and test HTTP requests in a Go test.  See [tests/client_test.go](./tests/client_test.go) for more details.
+This example demonstrates how to use `reqb` to create and test HTTP requests in a Go test.  See [tests/client_test.go](./tests/client_test.go) for more details.
 
