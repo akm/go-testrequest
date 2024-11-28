@@ -1,10 +1,10 @@
-package testrequest
+package reqb
 
 import (
 	"net/http"
 	"testing"
 
-	"github.com/akm/go-testrequest/builder"
+	"github.com/akm/reqb/builder"
 )
 
 // New creates a new request with the specified method and options.

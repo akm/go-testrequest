@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/akm/go-testrequest"
+	"github.com/akm/reqb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +21,7 @@ func TestClientWithServer(t *testing.T) {
 	require.NoError(t, err)
 
 	baseURL := testServer.URL
-	baseOpts := testrequest.Options{testrequest.BaseUrl(baseURL)}
+	baseOpts := reqb.Options{reqb.BaseUrl(baseURL)}
 
 	defaultHeader := func() http.Header {
 		return http.Header{
@@ -41,15 +41,15 @@ func TestClientWithServer(t *testing.T) {
 
 	type pattern *struct {
 		name     string
-		funcs    map[string]testrequest.Func
+		funcs    map[string]reqb.Func
 		expected *request
 	}
 	patterns := []pattern{
 		{
 			"GET /",
-			map[string]testrequest.Func{
-				"ad-hoc":           testrequest.GET(testrequest.BaseUrl(baseURL)),
-				"package function": testrequest.GET(baseOpts...),
+			map[string]reqb.Func{
+				"ad-hoc":           reqb.GET(reqb.BaseUrl(baseURL)),
+				"package function": reqb.GET(baseOpts...),
 				"options method":   baseOpts.GET(),
 			},
 			&request{
@@ -61,21 +61,21 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"POST /users",
-			map[string]testrequest.Func{
-				"ad-hoc": testrequest.POST(
-					testrequest.BaseUrl(baseURL),
-					testrequest.Path("/users"),
-					testrequest.BodyString("hello, world"),
+			map[string]reqb.Func{
+				"ad-hoc": reqb.POST(
+					reqb.BaseUrl(baseURL),
+					reqb.Path("/users"),
+					reqb.BodyString("hello, world"),
 				),
-				"package function": testrequest.POST(
+				"package function": reqb.POST(
 					append(baseOpts,
-						testrequest.Path("/users"),
-						testrequest.BodyString("hello, world"),
+						reqb.Path("/users"),
+						reqb.BodyString("hello, world"),
 					)...,
 				),
 				"options method": baseOpts.POST(
-					testrequest.Path("/users"),
-					testrequest.BodyString("hello, world"),
+					reqb.Path("/users"),
+					reqb.BodyString("hello, world"),
 				),
 			},
 			&request{
@@ -87,24 +87,24 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"PUT /users/123",
-			map[string]testrequest.Func{
-				"ad-hoc": testrequest.PUT(
-					testrequest.BaseUrl(baseURL),
-					testrequest.Path("/users/%d", 123),
-					testrequest.BodyString("{\"name\":\"foo\"}"),
-					testrequest.Header("Content-Type", "application/json"),
+			map[string]reqb.Func{
+				"ad-hoc": reqb.PUT(
+					reqb.BaseUrl(baseURL),
+					reqb.Path("/users/%d", 123),
+					reqb.BodyString("{\"name\":\"foo\"}"),
+					reqb.Header("Content-Type", "application/json"),
 				),
-				"package function": testrequest.PUT(
+				"package function": reqb.PUT(
 					append(baseOpts,
-						testrequest.Path("/users/%d", 123),
-						testrequest.BodyString("{\"name\":\"foo\"}"),
-						testrequest.Header("Content-Type", "application/json"),
+						reqb.Path("/users/%d", 123),
+						reqb.BodyString("{\"name\":\"foo\"}"),
+						reqb.Header("Content-Type", "application/json"),
 					)...,
 				),
 				"options method": baseOpts.PUT(
-					testrequest.Path("/users/%d", 123),
-					testrequest.BodyString("{\"name\":\"foo\"}"),
-					testrequest.Header("Content-Type", "application/json"),
+					reqb.Path("/users/%d", 123),
+					reqb.BodyString("{\"name\":\"foo\"}"),
+					reqb.Header("Content-Type", "application/json"),
 				),
 			},
 			&request{
@@ -118,27 +118,27 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"PATCH /users/123",
-			map[string]testrequest.Func{
-				"ad-hoc": testrequest.PATCH(
-					testrequest.BaseUrl(baseURL),
-					testrequest.Path("/users/%d", 123),
-					testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
-					testrequest.Header("Content-Type", "application/json"),
-					testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
+			map[string]reqb.Func{
+				"ad-hoc": reqb.PATCH(
+					reqb.BaseUrl(baseURL),
+					reqb.Path("/users/%d", 123),
+					reqb.BodyBytes([]byte("{\"name\":\"bar\"}")),
+					reqb.Header("Content-Type", "application/json"),
+					reqb.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
 				),
-				"package function": testrequest.PATCH(
+				"package function": reqb.PATCH(
 					append(baseOpts,
-						testrequest.Path("/users/%d", 123),
-						testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
-						testrequest.Header("Content-Type", "application/json"),
-						testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
+						reqb.Path("/users/%d", 123),
+						reqb.BodyBytes([]byte("{\"name\":\"bar\"}")),
+						reqb.Header("Content-Type", "application/json"),
+						reqb.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
 					)...,
 				),
 				"options method": baseOpts.PATCH(
-					testrequest.Path("/users/%d", 123),
-					testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
-					testrequest.Header("Content-Type", "application/json"),
-					testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
+					reqb.Path("/users/%d", 123),
+					reqb.BodyBytes([]byte("{\"name\":\"bar\"}")),
+					reqb.Header("Content-Type", "application/json"),
+					reqb.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
 				),
 			},
 			&request{
@@ -153,21 +153,21 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"DELETE /users/456",
-			map[string]testrequest.Func{
-				"ad-hoc": testrequest.DELETE(
-					testrequest.BaseUrl(baseURL),
-					testrequest.Path("/users/%d", 456),
-					testrequest.BodyString(""),
+			map[string]reqb.Func{
+				"ad-hoc": reqb.DELETE(
+					reqb.BaseUrl(baseURL),
+					reqb.Path("/users/%d", 456),
+					reqb.BodyString(""),
 				),
-				"package function": testrequest.DELETE(
+				"package function": reqb.DELETE(
 					append(baseOpts,
-						testrequest.Path("/users/%d", 456),
-						testrequest.BodyString(""),
+						reqb.Path("/users/%d", 456),
+						reqb.BodyString(""),
 					)...,
 				),
 				"options method": baseOpts.DELETE(
-					testrequest.Path("/users/%d", 456),
-					testrequest.BodyString(""),
+					reqb.Path("/users/%d", 456),
+					reqb.BodyString(""),
 				),
 			},
 			&request{
@@ -179,15 +179,15 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"OPTIONS /",
-			map[string]testrequest.Func{
-				"ad-hoc with schema, host, port-string": testrequest.OPTIONS(
-					// testrequest.BaseUrl(baseURL),
-					testrequest.Scheme("http"),
-					testrequest.Host(testServerURL.Hostname()),
-					testrequest.PortString(testServerURL.Port()),
+			map[string]reqb.Func{
+				"ad-hoc with schema, host, port-string": reqb.OPTIONS(
+					// reqb.BaseUrl(baseURL),
+					reqb.Scheme("http"),
+					reqb.Host(testServerURL.Hostname()),
+					reqb.PortString(testServerURL.Port()),
 				),
-				"ad-hoc with baseUrl": testrequest.OPTIONS(testrequest.BaseUrl(baseURL)),
-				"package function":    testrequest.OPTIONS(baseOpts...),
+				"ad-hoc with baseUrl": reqb.OPTIONS(reqb.BaseUrl(baseURL)),
+				"package function":    reqb.OPTIONS(baseOpts...),
 				"options method":      baseOpts.OPTIONS(),
 			},
 			&request{

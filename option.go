@@ -1,11 +1,11 @@
-package testrequest
+package reqb
 
 import (
 	"context"
 	"io"
 	"net/http"
 
-	"github.com/akm/go-testrequest/builder"
+	"github.com/akm/reqb/builder"
 )
 
 // Option is a function that modifies the builder.
