@@ -1,4 +1,4 @@
-package testrequest
+package reqb
 
 import (
 	"context"
