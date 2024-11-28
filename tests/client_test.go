@@ -21,7 +21,7 @@ func TestClientWithServer(t *testing.T) {
 	require.NoError(t, err)
 
 	baseURL := testServer.URL
-	baseOpts := []testrequest.Option{testrequest.BaseUrl(baseURL)}
+	baseOpts := testrequest.Options{testrequest.BaseUrl(baseURL)}
 
 	defaultHeader := func() http.Header {
 		return http.Header{
@@ -50,6 +50,7 @@ func TestClientWithServer(t *testing.T) {
 			map[string]testrequest.Func{
 				"ad-hoc":           testrequest.GET(testrequest.BaseUrl(baseURL)),
 				"package function": testrequest.GET(baseOpts...),
+				"options method":   baseOpts.GET(),
 			},
 			&request{
 				Method: http.MethodGet,
@@ -71,6 +72,10 @@ func TestClientWithServer(t *testing.T) {
 						testrequest.Path("/users"),
 						testrequest.BodyString("hello, world"),
 					)...,
+				),
+				"options method": baseOpts.POST(
+					testrequest.Path("/users"),
+					testrequest.BodyString("hello, world"),
 				),
 			},
 			&request{
@@ -95,6 +100,11 @@ func TestClientWithServer(t *testing.T) {
 						testrequest.BodyString("{\"name\":\"foo\"}"),
 						testrequest.Header("Content-Type", "application/json"),
 					)...,
+				),
+				"options method": baseOpts.PUT(
+					testrequest.Path("/users/%d", 123),
+					testrequest.BodyString("{\"name\":\"foo\"}"),
+					testrequest.Header("Content-Type", "application/json"),
 				),
 			},
 			&request{
@@ -124,6 +134,12 @@ func TestClientWithServer(t *testing.T) {
 						testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
 					)...,
 				),
+				"options method": baseOpts.PATCH(
+					testrequest.Path("/users/%d", 123),
+					testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
+					testrequest.Header("Content-Type", "application/json"),
+					testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
+				),
 			},
 			&request{
 				Method: http.MethodPatch,
@@ -149,6 +165,10 @@ func TestClientWithServer(t *testing.T) {
 						testrequest.BodyString(""),
 					)...,
 				),
+				"options method": baseOpts.DELETE(
+					testrequest.Path("/users/%d", 456),
+					testrequest.BodyString(""),
+				),
 			},
 			&request{
 				Method: http.MethodDelete,
@@ -160,13 +180,15 @@ func TestClientWithServer(t *testing.T) {
 		{
 			"OPTIONS /",
 			map[string]testrequest.Func{
-				"ad-hoc": testrequest.OPTIONS(
+				"ad-hoc with schema, host, port-string": testrequest.OPTIONS(
 					// testrequest.BaseUrl(baseURL),
 					testrequest.Scheme("http"),
 					testrequest.Host(testServerURL.Hostname()),
 					testrequest.PortString(testServerURL.Port()),
 				),
-				"package function": testrequest.OPTIONS(baseOpts...),
+				"ad-hoc with baseUrl": testrequest.OPTIONS(testrequest.BaseUrl(baseURL)),
+				"package function":    testrequest.OPTIONS(baseOpts...),
+				"options method":      baseOpts.OPTIONS(),
 			},
 			&request{
 				Method: http.MethodOptions,
