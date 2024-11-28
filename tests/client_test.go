@@ -40,16 +40,17 @@ func TestClientWithServer(t *testing.T) {
 	}
 
 	type pattern *struct {
-		name         string
-		reqByFunc    testrequest.Func
-		reqByFactory testrequest.Func
-		expected     *request
+		name     string
+		funcs    map[string]testrequest.Func
+		expected *request
 	}
 	patterns := []pattern{
 		{
 			"GET /",
-			testrequest.GET(testrequest.BaseUrl(baseURL)),
-			testrequest.GET(baseOpts...),
+			map[string]testrequest.Func{
+				"ad-hoc":           testrequest.GET(testrequest.BaseUrl(baseURL)),
+				"package function": testrequest.GET(baseOpts...),
+			},
 			&request{
 				Method: http.MethodGet,
 				Url:    "/",
@@ -59,17 +60,19 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"POST /users",
-			testrequest.POST(
-				testrequest.BaseUrl(baseURL),
-				testrequest.Path("/users"),
-				testrequest.BodyString("hello, world"),
-			),
-			testrequest.POST(
-				append(baseOpts,
+			map[string]testrequest.Func{
+				"ad-hoc": testrequest.POST(
+					testrequest.BaseUrl(baseURL),
 					testrequest.Path("/users"),
 					testrequest.BodyString("hello, world"),
-				)...,
-			),
+				),
+				"package function": testrequest.POST(
+					append(baseOpts,
+						testrequest.Path("/users"),
+						testrequest.BodyString("hello, world"),
+					)...,
+				),
+			},
 			&request{
 				Method: http.MethodPost,
 				Url:    "/users",
@@ -79,19 +82,21 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"PUT /users/123",
-			testrequest.PUT(
-				testrequest.BaseUrl(baseURL),
-				testrequest.Path("/users/%d", 123),
-				testrequest.BodyString("{\"name\":\"foo\"}"),
-				testrequest.Header("Content-Type", "application/json"),
-			),
-			testrequest.PUT(
-				append(baseOpts,
+			map[string]testrequest.Func{
+				"ad-hoc": testrequest.PUT(
+					testrequest.BaseUrl(baseURL),
 					testrequest.Path("/users/%d", 123),
 					testrequest.BodyString("{\"name\":\"foo\"}"),
 					testrequest.Header("Content-Type", "application/json"),
-				)...,
-			),
+				),
+				"package function": testrequest.PUT(
+					append(baseOpts,
+						testrequest.Path("/users/%d", 123),
+						testrequest.BodyString("{\"name\":\"foo\"}"),
+						testrequest.Header("Content-Type", "application/json"),
+					)...,
+				),
+			},
 			&request{
 				Method: http.MethodPut,
 				Url:    "/users/123",
@@ -103,21 +108,23 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"PATCH /users/123",
-			testrequest.PATCH(
-				testrequest.BaseUrl(baseURL),
-				testrequest.Path("/users/%d", 123),
-				testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
-				testrequest.Header("Content-Type", "application/json"),
-				testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
-			),
-			testrequest.PATCH(
-				append(baseOpts,
+			map[string]testrequest.Func{
+				"ad-hoc": testrequest.PATCH(
+					testrequest.BaseUrl(baseURL),
 					testrequest.Path("/users/%d", 123),
 					testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
 					testrequest.Header("Content-Type", "application/json"),
 					testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
-				)...,
-			),
+				),
+				"package function": testrequest.PATCH(
+					append(baseOpts,
+						testrequest.Path("/users/%d", 123),
+						testrequest.BodyBytes([]byte("{\"name\":\"bar\"}")),
+						testrequest.Header("Content-Type", "application/json"),
+						testrequest.Cookie(&http.Cookie{Name: "session", Value: "session1"}),
+					)...,
+				),
+			},
 			&request{
 				Method: http.MethodPatch,
 				Url:    "/users/123",
@@ -130,17 +137,19 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"DELETE /users/456",
-			testrequest.DELETE(
-				testrequest.BaseUrl(baseURL),
-				testrequest.Path("/users/%d", 456),
-				testrequest.BodyString(""),
-			),
-			testrequest.DELETE(
-				append(baseOpts,
+			map[string]testrequest.Func{
+				"ad-hoc": testrequest.DELETE(
+					testrequest.BaseUrl(baseURL),
 					testrequest.Path("/users/%d", 456),
 					testrequest.BodyString(""),
-				)...,
-			),
+				),
+				"package function": testrequest.DELETE(
+					append(baseOpts,
+						testrequest.Path("/users/%d", 456),
+						testrequest.BodyString(""),
+					)...,
+				),
+			},
 			&request{
 				Method: http.MethodDelete,
 				Url:    "/users/456",
@@ -150,13 +159,15 @@ func TestClientWithServer(t *testing.T) {
 		},
 		{
 			"OPTIONS /",
-			testrequest.OPTIONS(
-				// testrequest.BaseUrl(baseURL),
-				testrequest.Scheme("http"),
-				testrequest.Host(testServerURL.Hostname()),
-				testrequest.PortString(testServerURL.Port()),
-			),
-			testrequest.OPTIONS(baseOpts...),
+			map[string]testrequest.Func{
+				"ad-hoc": testrequest.OPTIONS(
+					// testrequest.BaseUrl(baseURL),
+					testrequest.Scheme("http"),
+					testrequest.Host(testServerURL.Hostname()),
+					testrequest.PortString(testServerURL.Port()),
+				),
+				"package function": testrequest.OPTIONS(baseOpts...),
+			},
 			&request{
 				Method: http.MethodOptions,
 				Url:    "/",
@@ -166,20 +177,9 @@ func TestClientWithServer(t *testing.T) {
 		},
 	}
 
-	type getter struct {
-		name string
-		get  func(p pattern) testrequest.Func
-	}
-
-	funcGetters := []getter{
-		{"by func", func(p pattern) testrequest.Func { return p.reqByFunc }},
-		{"by factory", func(p pattern) testrequest.Func { return p.reqByFactory }},
-	}
-
 	for _, p := range patterns {
-		for _, fg := range funcGetters {
-			getter := fg.get(p)
-			t.Run(p.name+" "+fg.name, func(t *testing.T) {
+		for funcName, getter := range p.funcs {
+			t.Run(p.name+" "+funcName, func(t *testing.T) {
 				client := &http.Client{}
 
 				req := getter(t)
