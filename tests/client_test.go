@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"testing"
 
-	reqb "github.com/akm/go-testrequest"
+	"github.com/akm/reqb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

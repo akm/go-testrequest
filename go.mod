@@ -1,4 +1,4 @@
-module github.com/akm/go-testrequest
+module github.com/akm/reqb
 
 go 1.21.13
 
