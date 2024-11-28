@@ -1,4 +1,4 @@
-package testrequest
+package builder
 
 import (
 	"context"
@@ -72,4 +72,8 @@ func (b *builder) buildURL() string {
 		}
 	}
 	return url
+}
+
+func Build(b *builder) (*http.Request, error) {
+	return b.build()
 }
